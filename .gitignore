@@ -3,3 +3,4 @@ build
 tags
 .editorconfig
 .idea
+.ipynb_checkpoints
