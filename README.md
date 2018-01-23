@@ -12,25 +12,25 @@ Throttle parameter used to reduce car speed.
 #### PID consists from the next components:
 
 
-P - for proportinal. Helps in cases like if a car is far left from the reference trajectory (high CTE) 
+`P - for proportinal`. Helps in cases like if a car is far left from the reference trajectory (high CTE) 
 then this component will proportinally impact on car steering angle to return car back to the reference trajectory. 
 However car will never reach the CTE based only on P component, but will oscillate around it. 
 To stabilize car behaviour we should use I and D components all together with P.
 
 
-I - for integral. Main role of this component is to mitigate any systematic biases by accumulating CTE over the time. 
+`I - for integral`. Main role of this component is to mitigate any systematic biases by accumulating CTE over the time. 
 This allows us drive a car at high speed with little or no oscillations.
 
 
-D - for derivate. This component is drive the car towards reference trajectory. 
+`D - for derivate`. This component is drive the car towards reference trajectory. 
 Because of the sign of this component it can either complement proportional component by increasing steering angle in case the car is moving out of reference trajectory 
 or it can make steering angle smoother if car is moving towards reference trajectory since derivative value in such case will be negative.
 
 ## Hyperparameter Tuning
 
-All parameters were determined by manual tuning. Initially I started from the parameters setup proposed in Lecture 16, Lesson 11: P 0.2, I 0.004, D 3.0.
+All parameters were determined by manual tuning. Initially I started from the parameters setup proposed in Lecture 16, Lesson 11: `P 0.2, I 0.004, D 3.0`.
 The problem was that car didn't drive smooth at high speed and often ending with crashes. 
-So I decided to play a little bit with parameter tuning and stopped on next setup: P 0.2, I 0.001, D 6.0 (find my analysis notebook follow the [link](data_analysis.ipynb)).
+So I decided to play a little bit with parameter tuning and stopped on next setup: `P 0.2, I 0.001, D 6.0` (find my analysis notebook follow the [link](data_analysis.ipynb)).
 With those parameters I was able to drive around 60 MPH, but never managed to get better than that. 
 So then I decided to introduce second PID to control car speed since there are straight parts on the track where the car can drive at high speed, but we also need to break when car is about make a turn.
 For PID that control car speed I also pick up the same parameters as for PID controlling steering angle.
