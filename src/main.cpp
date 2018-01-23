@@ -3,6 +3,7 @@
 #include "json.hpp"
 #include "PID.h"
 #include <math.h>
+#include "data_handler.cpp"
 
 // for convenience
 using json = nlohmann::json;
@@ -32,12 +33,16 @@ int main()
 {
   uWS::Hub h;
 
-  PID pid;
-  // TODO: Initialize the pid variable.
-  // Taken from the lecture Lesson 16, 11
-  pid.Init(0.2, 0.004, 3.0);
+  // Data handler class to write calucalation output to file
+  DataHandler dh("output.txt");
 
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  PID pid;
+  PID pid_throttle;
+  // TODO: Initialize the pid variable.
+  pid.Init(0.2, 0.001, 6.0);
+  pid_throttle.Init(pid.Kp, pid.Ki, pid.Kd);
+
+  h.onMessage([&pid, &pid_throttle, &dh](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -61,16 +66,32 @@ int main()
           */
           pid.UpdateError(cte);
           steer_value = pid.TotalError();
-          
+
+          pid_throttle.UpdateError(cte);
+          double throttle = max(0.01, 0.8 - fabs(pid_throttle.TotalError()));
+
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
 
+
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+          msgJson["throttle"] = throttle;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+//          std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+
+          // log data
+          json stats;
+          stats["cte"] = cte;
+          stats["speed"] = speed;
+          stats["angle"] = angle;
+          stats["d_error"] = pid.d_error;
+          stats["i_error"] = pid.i_error;
+          stats["p_error"] = pid.p_error;
+          stats["steering_angle"] = msgJson["steering_angle"];
+          stats["throttle"] = msgJson["throttle"];
+          dh.write(stats);
         }
       } else {
         // Manual driving
@@ -95,11 +116,13 @@ int main()
     }
   });
 
-  h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
+  h.onConnection([&h, &dh](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
+    dh.openFile();
     std::cout << "Connected!!!" << std::endl;
   });
 
-  h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length) {
+  h.onDisconnection([&h, &dh](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length) {
+    dh.closeFile();
     ws.close();
     std::cout << "Disconnected" << std::endl;
   });
