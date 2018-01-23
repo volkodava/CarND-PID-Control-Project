@@ -9,13 +9,19 @@ The main project input are cross-track error and throttle. Cross-track error is 
 Throttle parameter used to reduce car speed.
 
 
-PID consists from the next components:
+#### PID consists from the next components:
+
+
 P - for proportinal. Helps in cases like if a car is far left from the reference trajectory (high CTE) 
 then this component will proportinally impact on car steering angle to return car back to the reference trajectory. 
 However car will never reach the CTE based only on P component, but will oscillate around it. 
 To stabilize car behaviour we should use I and D components all together with P.
+
+
 I - for integral. Main role of this component is to mitigate any systematic biases by accumulating CTE over the time. 
 This allows us drive a car at high speed with little or no oscillations.
+
+
 D - for derivate. This component is drive the car towards reference trajectory. 
 Because of the sign of this component it can either complement proportional component by increasing steering angle in case the car is moving out of reference trajectory 
 or it can make steering angle smoother if car is moving towards reference trajectory since derivative value in such case will be negative.
